@@ -26,6 +26,7 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
+	// calling gRPC remote GetOrder method
 	res, err := c.GetOrder(ctx, &wrappers.StringValue{Value: "103"})
 
 	log.Println("GetOrder response -> : ", res)
