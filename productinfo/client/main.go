@@ -7,7 +7,7 @@ import (
 
 	"google.golang.org/grpc"
 
-	pb "github.com/asekhamhe/grpc/productinfo/server/ecommerce"
+	pb "github.com/asekhamhe/grpc/productinfo/client/ecommerce"
 )
 
 const address = "localhost:50051"
