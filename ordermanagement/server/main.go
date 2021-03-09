@@ -4,9 +4,12 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net"
+	"strings"
 
+	"github.com/golang/protobuf/ptypes/wrappers"
 	wrapper "github.com/golang/protobuf/ptypes/wrappers"
 
 	pb "github.com/asekhamhe/grpc/ordermanagement/server/ecommerce"
@@ -28,6 +31,29 @@ func (s *server) GetOrder(ctx context.Context, id *wrapper.StringValue) (*pb.Ord
 	// service implementation
 	ord, _ := orderMap[id.Value]
 	return &ord, nil
+}
+
+// SearchOrders for streaming query
+func (s *server) SearchOrder(q *wrappers.StringValue, st pb.OrderManagement_SearchOrderServer) error {
+
+	for k, o := range orderMap {
+		log.Print(k, o)
+		for _, i := range o.Items {
+			log.Print(i)
+			if strings.Contains(i, q.Value) {
+				// send the matching orders in a stream
+				err := st.Send(&o)
+				if err != nil {
+					return fmt.Errorf("error sending message to stream : ", err)
+				}
+				log.Print("Matching Order Found : " + k)
+				break
+
+			}
+		}
+	}
+	return nil
+
 }
 
 func main() {
