@@ -91,8 +91,8 @@ func (s *server) ProcessOrders(stream pb.OrderManagement_ProcessOrdersServer) er
 			// Client has sent all the messages
 			// Send remaining shipments
 			log.Printf("EOF : %s ", oID)
-			for _, ship := range comShipMap {
-				if err := stream.Send(&ship); err != nil {
+			for _, shipment := range comShipMap {
+				if err := stream.Send(&shipment); err != nil {
 					return err
 				}
 
@@ -112,7 +112,7 @@ func (s *server) ProcessOrders(stream pb.OrderManagement_ProcessOrdersServer) er
 			shipment.OrdersList = append(shipment.OrdersList, &ord)
 			comShipMap[dest] = shipment
 		} else {
-			comShip := pb.CombineShipment{Id: "cmb - " + (orderMap[oID.GetValue()].Destination), Status: "Processed!"}
+			comShip := pb.CombineShipment{Id: " cmb - " + (orderMap[oID.GetValue()].Destination), Status: "Processed!"}
 			ord := orderMap[oID.GetValue()]
 			comShip.OrdersList = append(shipment.OrdersList, &ord)
 			comShipMap[dest] = comShip

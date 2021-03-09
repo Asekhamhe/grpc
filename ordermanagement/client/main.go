@@ -24,7 +24,7 @@ func main() {
 	defer conn.Close()
 	c := pb.NewOrderManagementClient(conn)
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
 	defer cancel()
 
 	// ============================== Unary ===================
