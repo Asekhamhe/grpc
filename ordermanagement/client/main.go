@@ -42,4 +42,37 @@ func main() {
 		// handle other possible errors
 		log.Print("Search Result : ", so)
 	}
+
+	// // Update Orders : Client streaming scenario
+
+	updOrder1 := pb.Order{Id: "102", Items: []string{"Google Pixel 3A", "Google Pixel Book"}, Destination: "Mountain View, CA", Price: 1100.00}
+	updOrder2 := pb.Order{Id: "103", Items: []string{"Apple Watch S4", "Mac Book Pro", "iPad Pro"}, Destination: "San Jose, CA", Price: 2800.00}
+	updOrder3 := pb.Order{Id: "104", Items: []string{"Google Home Mini", "Google Nest Hub", "iPad Mini"}, Destination: "Mountain View, CA", Price: 2200.00}
+
+	// calling gRPC remote updateOrders method
+	updSt, err := c.UpdateOrders(ctx)
+	if err != nil {
+		log.Fatalf("%v.UpdateOrders(_) = _, %v", c, err)
+	}
+
+	// updating order 1
+	if err := updSt.Send(&updOrder1); err != nil {
+		log.Fatalf("%v.Send(%v) = %v", updSt, updOrder1, err)
+	}
+
+	// updating order 2
+	if err := updSt.Send(&updOrder2); err != nil {
+		log.Fatalf("%v.Send(%v) = %v", updSt, updOrder2, err)
+	}
+
+	// updating order 3
+	if err := updSt.Send(&updOrder3); err != nil {
+		log.Fatalf("%v.Send(%v) = %v", updSt, updOrder3, err)
+	}
+
+	updateRes, err := updSt.CloseAndRecv()
+	if err != nil {
+		log.Fatalf("%v.CloseAndRecv() got error %v, want %v", updSt, err, nil)
+	}
+	log.Printf("Update Orders Res: %s", updateRes)
 }
