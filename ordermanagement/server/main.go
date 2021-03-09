@@ -17,7 +17,10 @@ import (
 	"google.golang.org/grpc"
 )
 
-const port = ":50051"
+const (
+	port           = ":50051"
+	orderBatchSize = 3
+)
 
 var orderMap = make(map[string]pb.Order)
 
@@ -74,6 +77,60 @@ func (s *server) UpdateOrders(stream pb.OrderManagement_UpdateOrdersServer) erro
 
 		log.Printf("Order ID : %s - %s", o.Id, "Updated")
 		ostr += o.Id + ", "
+	}
+}
+
+// Bi-directional Streaming RPC for ProcessOrders
+func (s *server) ProcessOrders(stream pb.OrderManagement_ProcessOrdersServer) error {
+	batchMaker := 1
+	var comShipMap = make(map[string]pb.CombineShipment)
+	for {
+		oID, err := stream.Recv()
+		log.Printf("Reading Proc order : %s", oID)
+		if err == io.EOF {
+			// Client has sent all the messages
+			// Send remaining shipments
+			log.Printf("EOF : %s ", oID)
+			for _, ship := range comShipMap {
+				if err := stream.Send(&ship); err != nil {
+					return err
+				}
+
+			}
+			return nil
+		}
+		if err != nil {
+			log.Println(err)
+			return err
+		}
+		dest := orderMap[oID.GetValue()].Destination
+		shipment, ok := comShipMap[dest]
+
+		// destination found
+		if ok {
+			ord := orderMap[oID.GetValue()]
+			shipment.OrdersList = append(shipment.OrdersList, &ord)
+			comShipMap[dest] = shipment
+		} else {
+			comShip := pb.CombineShipment{Id: "cmb - " + (orderMap[oID.GetValue()].Destination), Status: "Processed!"}
+			ord := orderMap[oID.GetValue()]
+			comShip.OrdersList = append(shipment.OrdersList, &ord)
+			comShipMap[dest] = comShip
+			log.Print(len(comShip.OrdersList), comShip.GetId())
+		}
+
+		if batchMaker == orderBatchSize {
+			for _, comb := range comShipMap {
+				log.Printf("Shipping : %v -> %v", comb.Id, len(comb.OrdersList))
+				if err := stream.Send(&comb); err != nil {
+					return err
+				}
+			}
+			batchMaker = 0
+			comShipMap = make(map[string]pb.CombineShipment)
+		} else {
+			batchMaker++
+		}
 	}
 }
 

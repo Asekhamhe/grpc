@@ -12,6 +12,8 @@ service OrderManagement {
     rpc searchOrders (google.protobuf.StringValue) returns (stream Order);
     // update orders
     rpc updateOrders (stream Order) returns (google.protobuf.StringValue);
+    // process orders for bidirectional streaming
+    rpc processOrders (stream google.protobuf.StringValue) returns (stream CombineShipment);
 }
 
 message Order {
@@ -20,4 +22,10 @@ message Order {
     string description = 3;
     float price = 4;
     string destination = 5;
+}
+
+message CombineShipment {
+    string id = 1;
+    string status = 2;
+    repeated Order ordersList = 3;
 }

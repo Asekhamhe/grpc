@@ -27,6 +27,8 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
+	// ============================== Unary ===================
+
 	// calling gRPC remote GetOrder method
 	res, err := c.GetOrder(ctx, &wrappers.StringValue{Value: "103"})
 	log.Println("GetOrder response -> : ", res)
@@ -42,6 +44,8 @@ func main() {
 		// handle other possible errors
 		log.Print("Search Result : ", so)
 	}
+
+	// ============================== Streaming ===================
 
 	// // Update Orders : Client streaming scenario
 
@@ -75,4 +79,7 @@ func main() {
 		log.Fatalf("%v.CloseAndRecv() got error %v, want %v", updSt, err, nil)
 	}
 	log.Printf("Update Orders Res: %s", updateRes)
+
+	// ================== Bidirectional Streaming ===================
+
 }
