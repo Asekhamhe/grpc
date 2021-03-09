@@ -5,6 +5,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"strings"
@@ -54,6 +55,26 @@ func (s *server) SearchOrders(q *wrappers.StringValue, st pb.OrderManagement_Sea
 	}
 	return nil
 
+}
+
+// updateOrders implementation for streaming RPC
+func (s *server) UpdateOrders(stream pb.OrderManagement_UpdateOrdersServer) error {
+	ostr := "Updated Order IDs : "
+	for {
+		o, err := stream.Recv()
+		if err == io.EOF {
+			return stream.SendAndClose(&wrappers.StringValue{Value: "Orders processed " + ostr})
+		}
+		if err != nil {
+			return nil
+		}
+
+		// Update order
+		orderMap[o.Id] = *o
+
+		log.Printf("Order ID : %s - %s", o.Id, "Updated")
+		ostr += o.Id + ", "
+	}
 }
 
 func main() {
