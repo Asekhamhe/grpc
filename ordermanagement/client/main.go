@@ -82,4 +82,42 @@ func main() {
 
 	// ================== Bidirectional Streaming ===================
 
+	strProcOrd, err := c.ProcessOrders(ctx)
+	if err != nil {
+		log.Fatalf("%v.ProcessOrders(_) = _, %v", c, err)
+	}
+	if err := strProcOrd.Send(&wrappers.StringValue{Value: "102"}); err != nil {
+		log.Fatalf("%v.Send(%v) = %v", c, "102", err)
+	}
+	if err := strProcOrd.Send(&wrappers.StringValue{Value: "103"}); err != nil {
+		log.Fatalf("%v.Send(%v) = %v", c, "103", err)
+	}
+	if err := strProcOrd.Send(&wrappers.StringValue{Value: "104"}); err != nil {
+		log.Fatalf("%v.Send(%v) = %v", c, "104", err)
+	}
+
+	ch := make(chan struct{})
+	go asyncRPC(strProcOrd, ch)
+	time.Sleep(time.Millisecond * 1000)
+
+	if err := strProcOrd.Send(&wrappers.StringValue{Value: "101"}); err != nil {
+		log.Fatalf("%v.Send(%v) = %v", c, "101", err)
+	}
+	if err := strProcOrd.CloseSend(); err != nil {
+		log.Fatal(err)
+	}
+	<-ch
+}
+
+func asyncRPC(streamProcOrd pb.OrderManagement_ProcessOrdersClient, c chan struct{}) {
+	for {
+		comShipment, err := streamProcOrd.Recv()
+		if err == io.EOF {
+			break
+		}
+		log.Print("Combined shipment : ", comShipment.OrdersList)
+	}
+
+	<-c
+
 }
