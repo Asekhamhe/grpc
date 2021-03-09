@@ -9,7 +9,7 @@ service OrderManagement {
     // defining a unary RPC by returning a single response
     rpc getOrder (google.protobuf.StringValue) returns (Order);
     // defining server-side streaming by returning a stream of order messages
-    rpc searchOrder (google.protobuf.StringValue) returns (stream Order);
+    rpc searchOrders (google.protobuf.StringValue) returns (stream Order);
 }
 
 message Order {

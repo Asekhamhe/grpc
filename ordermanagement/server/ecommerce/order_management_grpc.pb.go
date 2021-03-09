@@ -22,7 +22,7 @@ type OrderManagementClient interface {
 	// defining a unary RPC by returning a single response
 	GetOrder(ctx context.Context, in *wrapperspb.StringValue, opts ...grpc.CallOption) (*Order, error)
 	// defining server-side streaming by returning a stream of order messages
-	SearchOrder(ctx context.Context, in *wrapperspb.StringValue, opts ...grpc.CallOption) (OrderManagement_SearchOrderClient, error)
+	SearchOrders(ctx context.Context, in *wrapperspb.StringValue, opts ...grpc.CallOption) (OrderManagement_SearchOrdersClient, error)
 }
 
 type orderManagementClient struct {
@@ -42,12 +42,12 @@ func (c *orderManagementClient) GetOrder(ctx context.Context, in *wrapperspb.Str
 	return out, nil
 }
 
-func (c *orderManagementClient) SearchOrder(ctx context.Context, in *wrapperspb.StringValue, opts ...grpc.CallOption) (OrderManagement_SearchOrderClient, error) {
-	stream, err := c.cc.NewStream(ctx, &OrderManagement_ServiceDesc.Streams[0], "/ecommerce.OrderManagement/searchOrder", opts...)
+func (c *orderManagementClient) SearchOrders(ctx context.Context, in *wrapperspb.StringValue, opts ...grpc.CallOption) (OrderManagement_SearchOrdersClient, error) {
+	stream, err := c.cc.NewStream(ctx, &OrderManagement_ServiceDesc.Streams[0], "/ecommerce.OrderManagement/searchOrders", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &orderManagementSearchOrderClient{stream}
+	x := &orderManagementSearchOrdersClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -57,16 +57,16 @@ func (c *orderManagementClient) SearchOrder(ctx context.Context, in *wrapperspb.
 	return x, nil
 }
 
-type OrderManagement_SearchOrderClient interface {
+type OrderManagement_SearchOrdersClient interface {
 	Recv() (*Order, error)
 	grpc.ClientStream
 }
 
-type orderManagementSearchOrderClient struct {
+type orderManagementSearchOrdersClient struct {
 	grpc.ClientStream
 }
 
-func (x *orderManagementSearchOrderClient) Recv() (*Order, error) {
+func (x *orderManagementSearchOrdersClient) Recv() (*Order, error) {
 	m := new(Order)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -81,7 +81,7 @@ type OrderManagementServer interface {
 	// defining a unary RPC by returning a single response
 	GetOrder(context.Context, *wrapperspb.StringValue) (*Order, error)
 	// defining server-side streaming by returning a stream of order messages
-	SearchOrder(*wrapperspb.StringValue, OrderManagement_SearchOrderServer) error
+	SearchOrders(*wrapperspb.StringValue, OrderManagement_SearchOrdersServer) error
 	mustEmbedUnimplementedOrderManagementServer()
 }
 
@@ -92,8 +92,8 @@ type UnimplementedOrderManagementServer struct {
 func (UnimplementedOrderManagementServer) GetOrder(context.Context, *wrapperspb.StringValue) (*Order, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetOrder not implemented")
 }
-func (UnimplementedOrderManagementServer) SearchOrder(*wrapperspb.StringValue, OrderManagement_SearchOrderServer) error {
-	return status.Errorf(codes.Unimplemented, "method SearchOrder not implemented")
+func (UnimplementedOrderManagementServer) SearchOrders(*wrapperspb.StringValue, OrderManagement_SearchOrdersServer) error {
+	return status.Errorf(codes.Unimplemented, "method SearchOrders not implemented")
 }
 func (UnimplementedOrderManagementServer) mustEmbedUnimplementedOrderManagementServer() {}
 
@@ -126,24 +126,24 @@ func _OrderManagement_GetOrder_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
-func _OrderManagement_SearchOrder_Handler(srv interface{}, stream grpc.ServerStream) error {
+func _OrderManagement_SearchOrders_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(wrapperspb.StringValue)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(OrderManagementServer).SearchOrder(m, &orderManagementSearchOrderServer{stream})
+	return srv.(OrderManagementServer).SearchOrders(m, &orderManagementSearchOrdersServer{stream})
 }
 
-type OrderManagement_SearchOrderServer interface {
+type OrderManagement_SearchOrdersServer interface {
 	Send(*Order) error
 	grpc.ServerStream
 }
 
-type orderManagementSearchOrderServer struct {
+type orderManagementSearchOrdersServer struct {
 	grpc.ServerStream
 }
 
-func (x *orderManagementSearchOrderServer) Send(m *Order) error {
+func (x *orderManagementSearchOrdersServer) Send(m *Order) error {
 	return x.ServerStream.SendMsg(m)
 }
 
@@ -161,8 +161,8 @@ var OrderManagement_ServiceDesc = grpc.ServiceDesc{
 	},
 	Streams: []grpc.StreamDesc{
 		{
-			StreamName:    "searchOrder",
-			Handler:       _OrderManagement_SearchOrder_Handler,
+			StreamName:    "searchOrders",
+			Handler:       _OrderManagement_SearchOrders_Handler,
 			ServerStreams: true,
 		},
 	},

@@ -34,7 +34,7 @@ func (s *server) GetOrder(ctx context.Context, id *wrapper.StringValue) (*pb.Ord
 }
 
 // SearchOrders for streaming query
-func (s *server) SearchOrder(q *wrappers.StringValue, st pb.OrderManagement_SearchOrderServer) error {
+func (s *server) SearchOrders(q *wrappers.StringValue, st pb.OrderManagement_SearchOrdersServer) error {
 
 	for k, o := range orderMap {
 		log.Print(k, o)

@@ -4,6 +4,7 @@ package main
 
 import (
 	"context"
+	"io"
 	"log"
 	"time"
 
@@ -28,6 +29,17 @@ func main() {
 
 	// calling gRPC remote GetOrder method
 	res, err := c.GetOrder(ctx, &wrappers.StringValue{Value: "103"})
-
 	log.Println("GetOrder response -> : ", res)
+
+	// calling gRPC remote SearchOrders method
+	sst, _ := c.SearchOrders(ctx, &wrappers.StringValue{Value: "Google"})
+
+	for {
+		so, err := sst.Recv()
+		if err == io.EOF {
+			break
+		}
+		// handle other possible errors
+		log.Print("Search Result : ", so)
+	}
 }
