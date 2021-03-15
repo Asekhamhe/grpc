@@ -134,6 +134,23 @@ func (s *server) ProcessOrders(stream pb.OrderManagement_ProcessOrdersServer) er
 	}
 }
 
+// Server :: Unary Interceptor
+func orderUnaryServerInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	// Pre-processing logic
+	// Gets info about the current RPC call by examining the args passed in
+	log.Println("======= [Server Interceptor] ", info.FullMethod)
+	log.Printf("Pre Processing Message: %s", req)
+
+	// Invoking the handler to complete the normal execution of a unary RPC.
+	m, err := handler(ctx, req)
+
+	// Post processing logic
+	log.Printf("Post Processing Message : %s", m)
+
+	return m, err
+
+}
+
 func main() {
 	initSampleData()
 
@@ -142,7 +159,9 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	s := grpc.NewServer()
+	s := grpc.NewServer(
+		grpc.UnaryInterceptor(orderUnaryServerInterceptor),
+	)
 	pb.RegisterOrderManagementServer(s, &server{})
 	log.Printf("starting gRPC listener of port " + port)
 	if err := s.Serve(conn); err != nil {
