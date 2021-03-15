@@ -191,7 +191,7 @@ func main() {
 
 	s := grpc.NewServer(
 		grpc.UnaryInterceptor(orderUnaryServerInterceptor),
-		grpc.StreamInterceptor(orderServerStreamInterceptor)
+		grpc.StreamInterceptor(orderServerStreamInterceptor),
 	)
 	pb.RegisterOrderManagementServer(s, &server{})
 	log.Printf("starting gRPC listener of port " + port)
