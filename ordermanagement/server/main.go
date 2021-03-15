@@ -9,6 +9,7 @@ import (
 	"log"
 	"net"
 	"strings"
+	"time"
 
 	"github.com/golang/protobuf/ptypes/wrappers"
 	wrapper "github.com/golang/protobuf/ptypes/wrappers"
@@ -28,6 +29,10 @@ var orderMap = make(map[string]pb.Order)
 type server struct {
 	orderMap map[string]*pb.Order
 	pb.UnimplementedOrderManagementServer
+}
+
+type wrappedStream struct {
+	grpc.ServerStream
 }
 
 // GetOrder server method for client to consume
@@ -151,6 +156,31 @@ func orderUnaryServerInterceptor(ctx context.Context, req interface{}, info *grp
 
 }
 
+// Server :: Stream Interceptor
+func (w *wrappedStream) RecvMsg(m interface{}) error {
+	log.Printf("==== [Server Stream Interceptor Wrapper] "+"Receive a message (Type: %T) at %s", m, time.Now().Format(time.RFC3339))
+	return w.ServerStream.RecvMsg(m)
+}
+
+func (w *wrappedStream) SendMsg(m interface{}) error {
+	log.Printf("===== =[Server Stream Interceptor Wrapper] "+"Send a message (Type: %T) at %v", m, time.Now().Format(time.RFC3339))
+	return w.ServerStream.SendMsg(m)
+}
+
+// newWrappedStream
+func newWrappedStream(s grpc.ServerStream) grpc.ServerStream {
+	return &wrappedStream{s}
+}
+
+func orderServerStreamInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+	log.Println("====== [Server Stream Interceptor] ", info.FullMethod)
+	err := handler(srv, newWrappedStream(ss))
+	if err != nil {
+		log.Printf("rpc failed with error %v", err)
+	}
+	return err
+}
+
 func main() {
 	initSampleData()
 
@@ -161,6 +191,7 @@ func main() {
 
 	s := grpc.NewServer(
 		grpc.UnaryInterceptor(orderUnaryServerInterceptor),
+		grpc.StreamInterceptor(orderServerStreamInterceptor)
 	)
 	pb.RegisterOrderManagementServer(s, &server{})
 	log.Printf("starting gRPC listener of port " + port)
