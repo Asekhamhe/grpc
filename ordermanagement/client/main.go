@@ -15,9 +15,23 @@ import (
 
 const address = "localhost:50051"
 
+// Client-side Unary Interceptor
+func orderUnaryClientInterceptor(ctx context.Context, method string, req, res interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
+	// Preprocessor phase has access to the RPC request prior to sending it out to the server
+	log.Println("Method : " + method)
+
+	// Invoking the remote method
+	err := invoker(ctx, method, req, res, cc, opts...)
+
+	// Postprocessor phase
+	log.Println(res)
+
+	return err
+}
+
 func main() {
 	// set up connection to the server
-	conn, err := grpc.Dial(address, grpc.WithInsecure())
+	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithUnaryInterceptor(orderUnaryClientInterceptor))
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}
@@ -30,7 +44,7 @@ func main() {
 	// ============================== Unary ===================
 
 	// calling gRPC remote GetOrder method
-	res, err := c.GetOrder(ctx, &wrappers.StringValue{Value: "103"})
+	res, _ := c.GetOrder(ctx, &wrappers.StringValue{Value: "103"})
 	log.Println("GetOrder response -> : ", res)
 
 	// calling gRPC remote SearchOrders method
